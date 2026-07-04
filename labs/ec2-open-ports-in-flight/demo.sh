@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# EC2: open ports in-flight — end-to-end demo against a local Floci.
+# EC2: open ports in-flight. End-to-end demo against a local Floci.
 # Requires: aws CLI v2, docker, and Floci running on :4566 with the Docker socket mounted.
 set -euo pipefail
 
@@ -12,7 +12,7 @@ step() { printf '\n\033[1;35m== %s\033[0m\n' "$*"; }
 
 step "Health check"
 curl -sf "$AWS_ENDPOINT_URL/_floci/health" >/dev/null || {
-  echo "Floci is not reachable on $AWS_ENDPOINT_URL — see README.md"; exit 1; }
+  echo "Floci is not reachable on $AWS_ENDPOINT_URL, see README.md"; exit 1; }
 echo "ok"
 
 step "1. Security group with NO ingress rules"
@@ -32,9 +32,9 @@ echo "launched $IID"
 aws ec2 wait instance-running --instance-ids "$IID"
 sleep 3   # let UserData start httpd
 
-step "3. Nothing is reachable yet — no forward sidecars exist"
+step "3. Nothing is reachable yet: no forward sidecars exist"
 docker ps --filter "name=floci-ec2-fwd-$IID" --format '{{.Names}}  {{.Ports}}' | grep . \
-  && { echo "unexpected sidecar found"; exit 1; } || echo "(none — as expected)"
+  && { echo "unexpected sidecar found"; exit 1; } || echo "(none, as expected)"
 
 step "4. Open port 8080 on the RUNNING instance"
 aws ec2 authorize-security-group-ingress --group-id "$SG" \
@@ -48,12 +48,12 @@ HOST_PORT=$(docker ps --filter "name=floci-ec2-fwd-$IID-8080" --format '{{.Ports
 echo "host port: $HOST_PORT"
 curl -s "http://localhost:$HOST_PORT/"
 
-step "6. Revoke the rule — the sidecar goes away"
+step "6. Revoke the rule and the sidecar goes away"
 aws ec2 revoke-security-group-ingress --group-id "$SG" \
   --protocol tcp --port 8080 --cidr 0.0.0.0/0
 sleep 2
 docker ps --filter "name=floci-ec2-fwd-$IID-8080" --format '{{.Names}}' | grep . \
-  && { echo "sidecar still running"; exit 1; } || echo "(gone — as expected)"
+  && { echo "sidecar still running"; exit 1; } || echo "(gone, as expected)"
 
 step "7. Guardrail: an allow-all rule does NOT spawn 65k sidecars"
 aws ec2 authorize-security-group-ingress --group-id "$SG" \

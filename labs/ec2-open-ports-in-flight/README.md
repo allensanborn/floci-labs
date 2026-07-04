@@ -1,6 +1,6 @@
 # EC2: open ports in-flight
 
-> Launch a local EC2 instance, then open and close ports on it while it runs — no restart, no rebuild — and watch the socat sidecars appear and vanish.
+> Launch a local EC2 instance, then open and close ports on it while it runs, with no restart and no rebuild, and watch the socat sidecars appear and vanish.
 
 ## What it shows
 
@@ -39,10 +39,10 @@ The demo script:
 
 1. Creates a security group with **no** ingress rules
 2. Launches `ami-alpine` (→ `alpine:latest`) with UserData that starts busybox `httpd` on port 8080
-3. Shows that nothing is reachable — `docker ps` has no `floci-ec2-fwd-*` containers
-4. Calls `authorize-security-group-ingress` for 8080 — Floci reconciles the security group against live forwards and starts a `floci-ec2-fwd-<instanceId>-8080` sidecar publishing a host port from the 30000–30999 range
+3. Shows that nothing is reachable: `docker ps` has no `floci-ec2-fwd-*` containers
+4. Calls `authorize-security-group-ingress` for 8080. Floci reconciles the security group against live forwards and starts a `floci-ec2-fwd-<instanceId>-8080` sidecar publishing a host port from the 30000-30999 range
 5. `curl`s the app through the forwarded host port
-6. Revokes the rule — the sidecar is removed and the host port released
+6. Revokes the rule. The sidecar is removed and the host port released
 7. Tries an allow-all `0-65535` rule to show the guardrail: no sidecar storm, wide spans are skipped (per-instance cap is 20 by default)
 
 The interesting part is what *doesn't* happen: the instance container is never recreated or restarted. Docker only publishes ports at container creation, so Floci moves the mutable part (the forwards) out of the immutable part (the instance).
@@ -50,10 +50,10 @@ The interesting part is what *doesn't* happen: the instance container is never r
 ## Try changing...
 
 - Open a second port (add another `httpd` on 9090 in UserData) and watch a second sidecar appear
-- Reference another security group as the ingress source instead of a CIDR — no sidecar appears, because that means private-IP reachability in AWS, not host reachability
+- Reference another security group as the ingress source instead of a CIDR: no sidecar appears, because that means private-IP reachability in AWS, not host reachability
 - Restart the Floci container and check `docker ps`: persisted forwards are recreated from the saved mapping
 - Swap `ami-alpine` for `ami-ubuntu2204` or `ami-amazonlinux2023` (unknown `ami-*` IDs fall back to Amazon Linux 2023)
 
 ## Author
 
-Hector Ventura — [LinkedIn](https://www.linkedin.com/in/hectorvent/) · [floci.io](https://floci.io)
+Hector Ventura · [LinkedIn](https://www.linkedin.com/in/hectorvent/) · [floci.io](https://floci.io)
