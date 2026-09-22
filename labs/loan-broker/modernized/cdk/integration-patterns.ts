@@ -215,6 +215,7 @@ export interface AggregatorProps {
   readonly store: dynamodb.ITable;
   /** How many responses constitute "complete". */
   readonly completeAfter: number;
+  /** Path to the handler source; bundled with esbuild. */
   readonly entry: string;
   readonly functionName?: string;
 }

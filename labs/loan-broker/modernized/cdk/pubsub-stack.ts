@@ -81,7 +81,7 @@ export class PubSubStack extends Stack {
       displayName: "Mortgage quote requests",
     });
 
-    const bankFunctions = BANKS.map((bank: BankConfig) => {
+    BANKS.forEach((bank: BankConfig) => {
       const fn = new lambda.Function(this, `Bank${bank.id}`, {
         runtime: lambda.Runtime.NODEJS_22_X,
         handler: "app-sns.handler",
@@ -98,9 +98,9 @@ export class PubSubStack extends Stack {
         },
         onSuccess: new destinations.EventBridgeDestination(quoteEventBus),
       });
+      // Each bank subscribes itself. The broker never enumerates them.
       fn.addEventSource(new SnsEventSource(requestTopic));
       quoteEventBus.grantPutEventsTo(fn);
-      return fn;
     });
 
     // Partial aggregates, keyed by correlation id (the execution ARN).
@@ -199,6 +199,5 @@ export class PubSubStack extends Stack {
 
     new CfnOutput(this, "LoanBrokerArn", { value: stateMachine.stateMachineArn });
     new CfnOutput(this, "QuoteEventBusName", { value: quoteEventBus.eventBusName });
-    void bankFunctions;
   }
 }
