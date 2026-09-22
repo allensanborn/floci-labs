@@ -4,12 +4,13 @@
 # Note the shape of this script: it destroys one stack per `cdklocal destroy`
 # invocation and then checks the result itself, rather than calling `destroy --all`.
 #
-# `cdk destroy --all` does not work against Floci today. CDK polls DescribeStacks while a
-# delete is in flight; on real AWS a deleted stack stays describable by its stack id and
-# reports DELETE_COMPLETE, but Floci purges the record, so the next poll raises
-# `ValidationError: Stack with id ... does not exist`. CDK treats that as a monitoring
-# failure and abandons the rest of the run — so with two stacks you get one deleted, one
-# silently left behind, and exit code 0.
+# `cdk destroy --all` does not work against Floci today. DeleteStack is synchronous here,
+# so a stack is never observable in DELETE_IN_PROGRESS; on real AWS it returns straight
+# away and the stack stays describable by name until the delete finishes. CDK starts a
+# stack-activity monitor when it issues the delete and polls while it runs — here the
+# stack is already gone when the first poll lands, the monitor raises, and CDK abandons
+# the rest of the run. With two stacks you get one deleted, one silently left behind,
+# and exit code 0.
 set -uo pipefail
 
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

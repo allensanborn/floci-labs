@@ -106,9 +106,12 @@ the bus itself, using the exact envelope AWS's destination would have produced �
 `detail.responsePayload` = the return value. `FilterMortgageQuotesRule` then matches
 unchanged, and nothing else in the sample has to know. Default off; `run.sh` turns it on.
 
-**Its lifetime.** This is meant to be deleted. The gap is fixed on the
-`feat/lambda-async-invoke-destinations` branch of
-[allensanborn/floci](https://github.com/allensanborn/floci); once that ships in
+**Its lifetime.** This is meant to be deleted, and that has been verified rather than
+assumed. The gap is fixed on the `feat/lambda-async-invoke-destinations` branch of
+[allensanborn/floci](https://github.com/allensanborn/floci); running this lab against a
+build of that branch with `FLOCI_NO_LAMBDA_DESTINATIONS=0` — the shim off — the quotes
+flow through the real destination path and the workflow is resumed by `SendTaskSuccess`
+in about two seconds instead of falling into its five-second timeout. Once that ships in
 `floci/floci:latest`, drop the block in `bank/app-sns.js`, drop the env var, and the
 sample runs with zero Floci-specific code.
 
@@ -126,11 +129,11 @@ and reports `The specified bucket does not exist` — for a bucket that is right
 Using the plain endpoint sidesteps it. Also fixed on that same branch.
 
 **`teardown.sh` destroys one stack per `cdklocal destroy` invocation** rather than using
-`destroy --all`, which deletes only the first stack against Floci. CDK polls
-`DescribeStacks` during a delete; AWS keeps a deleted stack describable by its stack id,
-Floci purges it, and CDK treats the resulting `ValidationError` as a monitoring failure
-and abandons the rest of the run — exiting `0` with a stack still standing. Explained in
-the script and in ../README.md.
+`destroy --all`, which deletes only the first stack against Floci. `DeleteStack` is
+synchronous here, so a stack is never observable in `DELETE_IN_PROGRESS`; CDK's
+stack-activity monitor polls while the delete runs, finds the stack already gone, and
+abandons the rest of the run — exiting `0` with a stack still standing. Explained in the
+script and in ../README.md.
 
 **The credit bureau returns a random score between 300 and 900** (`credit-bureau/app.js`),
 so a given run may see three quotes, one, or none — each bank has its own
