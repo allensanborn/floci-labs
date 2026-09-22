@@ -309,6 +309,20 @@ One stack deleted, one silently left behind — and `cdk destroy --all` still ex
 Both `teardown.sh` scripts therefore destroy one stack per invocation and confirm the
 outcome against the API rather than trusting the exit code.
 
+The telling detail is that **deploying** works fine, and `CreateStack` has the same
+problem only worse: it blocks the caller for the whole build, so `CREATE_IN_PROGRESS` is
+just as invisible. CDK runs the same activity monitor on both. Deploy survives because
+when the monitor polls, the stack is *there* in a readable terminal state:
+
+```
+after create, DescribeStacks by name -> CREATE_COMPLETE
+after delete, DescribeStacks by name -> ValidationError
+```
+
+So the difference is not the missing in-progress window — it is that a by-name lookup
+after a delete *raises* rather than returning anything. Which is also correct AWS
+behaviour, so it is a genuine trade rather than a simple bug.
+
 ### Two smaller ones, both already fixed upstream but not yet released
 
 - **`ItemSelector` is not evaluated as JSONata** in a JSONata `Map` state. Floci 2.1.0
