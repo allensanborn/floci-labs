@@ -107,9 +107,8 @@ the bus itself, using the exact envelope AWS's destination would have produced �
 unchanged, and nothing else in the sample has to know. Default off; `run.sh` turns it on.
 
 **Its lifetime.** This is meant to be deleted, and that has been verified rather than
-assumed. The gap is fixed on the `feat/lambda-async-invoke-destinations` branch of
-[allensanborn/floci](https://github.com/allensanborn/floci); running this lab against a
-build of that branch with `FLOCI_NO_LAMBDA_DESTINATIONS=0` — the shim off — the quotes
+assumed. The gap is fixed in [allensanborn/floci#18](https://github.com/allensanborn/floci/pull/18);
+running this lab against a build of that branch with `FLOCI_NO_LAMBDA_DESTINATIONS=0` — the shim off — the quotes
 flow through the real destination path and the workflow is resumed by `SendTaskSuccess`
 in about two seconds instead of falling into its five-second timeout. Once that ships in
 `floci/floci:latest`, drop the block in `bank/app-sns.js`, drop the env var, and the
@@ -126,7 +125,8 @@ path-style `TemplateURL` of `http://s3.localhost.floci.io:4566/<bucket>/<key>`, 
 Floci's `CloudFormationService.fetchTemplateFromS3` treats any host ending in the
 configured suffix as virtual-hosted, so it parses the bucket as the literal string `"s3"`
 and reports `The specified bucket does not exist` — for a bucket that is right there.
-Using the plain endpoint sidesteps it. Also fixed on that same branch.
+Using the plain endpoint sidesteps it. Also fixed, in
+[allensanborn/floci#17](https://github.com/allensanborn/floci/pull/17).
 
 **`teardown.sh` destroys one stack per `cdklocal destroy` invocation** rather than using
 `destroy --all`, which deletes only the first stack against Floci. A delete finishes in

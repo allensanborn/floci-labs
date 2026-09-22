@@ -279,9 +279,8 @@ errors.
 Both tracks work around it with `FLOCI_NO_LAMBDA_DESTINATIONS=1`, which has the bank
 handler publish the exact envelope AWS's destination would have published — so the
 EventBridge rule matches unchanged and nothing else knows. It is one fenced block,
-default off, and meant to be deleted: the fix is on the
-`feat/lambda-async-invoke-destinations` branch of
-[allensanborn/floci](https://github.com/allensanborn/floci).
+default off, and meant to be deleted: the fix is in review as
+[allensanborn/floci#18](https://github.com/allensanborn/floci/pull/18).
 
 ### `cdk destroy --all` deletes only the first stack
 
@@ -330,7 +329,8 @@ behaviour, so it is a genuine trade rather than a simple bug.
   iteration as a literal string. Already fixed on `main`. The modernized track does not
   hit it, because with assigned variables an `ItemSelector` is unnecessary — each
   iteration reads `$request` and `$credit` directly.
-- **A path-style S3 URL against the S3 service host is mis-parsed.** With
+- **A path-style S3 URL against the S3 service host is mis-parsed.**
+  ([Fix in review.](https://github.com/allensanborn/floci/pull/17)) With
   `AWS_ENDPOINT_URL_S3=http://s3.localhost.floci.io:4566`, CDK emits a `TemplateURL` of
   `http://s3.localhost.floci.io:4566/<bucket>/<key>` and Floci reads the bucket as the
   literal string `"s3"`, then reports `The specified bucket does not exist` for a bucket
