@@ -1,0 +1,23 @@
+# Optional. Skip this if Floci is already running (`floci start`, or your own container).
+#
+# Two things here are load-bearing for this lab:
+#
+#   docker.sock  — Floci runs Lambda functions in real containers, so it needs the
+#                  socket to launch them. Without it, every Lambda invoke fails.
+#
+#   ...ALLOW_STUB_UNSUPPORTED_RESOURCE_TYPES=false
+#                — by default Floci accepts a CloudFormation resource type it does not
+#                  implement, assigns it a synthetic physical ID and lets the stack reach
+#                  CREATE_COMPLETE. That is a kind setting for exploratory work and a
+#                  terrible one for a lab whose claim is "this really deploys": you would
+#                  get a green stack with missing resources. Turned off, an unimplemented
+#                  type fails the stack instead, so the claim stays honest.
+services:
+  floci:
+    image: floci/floci:latest
+    ports:
+      - "4566:4566"
+    environment:
+      FLOCI_SERVICES_CLOUDFORMATION_ALLOW_STUB_UNSUPPORTED_RESOURCE_TYPES: "false"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

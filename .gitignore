@@ -67,3 +67,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.scratch/
+cdk.out/
+.cdk.staging/
