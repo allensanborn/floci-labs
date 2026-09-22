@@ -129,11 +129,10 @@ and reports `The specified bucket does not exist` — for a bucket that is right
 Using the plain endpoint sidesteps it. Also fixed on that same branch.
 
 **`teardown.sh` destroys one stack per `cdklocal destroy` invocation** rather than using
-`destroy --all`, which deletes only the first stack against Floci. `DeleteStack` is
-synchronous here, so a stack is never observable in `DELETE_IN_PROGRESS`; CDK's
-stack-activity monitor polls while the delete runs, finds the stack already gone, and
-abandons the rest of the run — exiting `0` with a stack still standing. Explained in the
-script and in ../README.md.
+`destroy --all`, which deletes only the first stack against Floci. A delete finishes in
+milliseconds here, far inside the first poll of CDK's stack-activity monitor, so the
+monitor finds the stack already gone, raises, and abandons the rest of the run — exiting
+`0` with a stack still standing. Explained in the script and in ../README.md.
 
 **The credit bureau returns a random score between 300 and 900** (`credit-bureau/app.js`),
 so a given run may see three quotes, one, or none — each bank has its own

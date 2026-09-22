@@ -285,19 +285,20 @@ default off, and meant to be deleted: the fix is on the
 
 ### `cdk destroy --all` deletes only the first stack
 
-`DeleteStack` is synchronous in Floci — it does not return until the stack is gone, so a
-stack is never observable in `DELETE_IN_PROGRESS`:
+A stack delete here finishes in **milliseconds** — far inside the first poll of any client
+watching it. `DeleteStack` is genuinely asynchronous (it returns before the delete
+completes), but the window is so short that `DELETE_IN_PROGRESS` is never actually
+observable. Measured from one process over raw HTTP, 60-resource stack:
 
-```console
-$ aws cloudformation delete-stack --stack-name probe
-$ aws cloudformation describe-stacks --stack-name probe   # immediately after
-ValidationError: Stack with id probe does not exist
+```
+DeleteStack returned in 2.6 ms
+first DescribeStacks 2.9 ms later -> ValidationError: ... does not exist
 ```
 
-On AWS, `DeleteStack` returns straight away and the stack stays describable by name as
-`DELETE_IN_PROGRESS` until the delete finishes. CDK starts a stack-activity monitor when
-it issues the delete and polls while it runs; here the stack is already gone when the
-first poll lands, the monitor raises, and the rest of the run is abandoned:
+On AWS the same delete takes seconds and the stack reports `DELETE_IN_PROGRESS` by name
+throughout. CDK starts a stack-activity monitor when it issues the delete and polls while
+it runs — here the stack is already gone when the first poll lands, the monitor raises,
+and the rest of the run is abandoned:
 
 ```
 LoanBroker-PubSub-Stack: destroying... [1/2]
