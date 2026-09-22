@@ -22,7 +22,9 @@
 
 ## Stack
 
-- **Language / runtime:** TypeScript (AWS CDK v2), Node.js 20+, Lambda `nodejs22.x`
+- **Language / runtime:** TypeScript (AWS CDK v2), Node.js 22+, Lambda `nodejs22.x`
+  (the CDK CLI prints an untested-Node warning above v22; both tracks were developed and
+  tested on v26 anyway, and it is only a warning)
 - **AWS services:** Step Functions, Lambda, DynamoDB, SNS, SQS, EventBridge,
   CloudFormation, IAM, CloudWatch Logs, S3 (CDK assets)
 - **Tooling:** `aws-cdk-local` (`cdklocal`), `mechanical-markdown` for the README test
