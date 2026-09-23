@@ -279,8 +279,13 @@ errors.
 Both tracks work around it with `FLOCI_NO_LAMBDA_DESTINATIONS=1`, which has the bank
 handler publish the exact envelope AWS's destination would have published — so the
 EventBridge rule matches unchanged and nothing else knows. It is one fenced block,
-default off, and meant to be deleted: the fix is in review as
-[allensanborn/floci#18](https://github.com/allensanborn/floci/pull/18).
+default off, and meant to be deleted. Tracked upstream as
+[floci-io/floci#4193](https://github.com/floci-io/floci/issues/4193); the fix is in review
+as [floci-io/floci#4247](https://github.com/floci-io/floci/pull/4247). That fix is
+deliberately narrow: it resolves the configuration on the function, so a destination
+configured on an *alias* still does not fire
+([floci-io/floci#4263](https://github.com/floci-io/floci/issues/4263)). This lab configures
+destinations on the function, so it is unaffected either way.
 
 ### `cdk destroy --all` deletes only the first stack
 
@@ -320,17 +325,22 @@ after delete, DescribeStacks by name -> ValidationError
 
 So the difference is not the missing in-progress window — it is that a by-name lookup
 after a delete *raises* rather than returning anything. Which is also correct AWS
-behaviour, so it is a genuine trade rather than a simple bug.
+behaviour, so it is a genuine trade rather than a simple bug. Tracked upstream as
+[floci-io/floci#4235](https://github.com/floci-io/floci/issues/4235).
 
 ### Two smaller ones, both already fixed upstream but not yet released
 
 - **`ItemSelector` is not evaluated as JSONata** in a JSONata `Map` state. Floci 2.1.0
   resolves it with the JSONPath resolver unconditionally, so every `{% … %}` reaches the
-  iteration as a literal string. Already fixed on `main`. The modernized track does not
+  iteration as a literal string. Fixed in
+  [floci-io/floci#3460](https://github.com/floci-io/floci/pull/3460), which landed on
+  `main` on 2026-09-16 — one day after the 2.1.0 image was built, so no released image
+  carries it yet. The modernized track does not
   hit it, because with assigned variables an `ItemSelector` is unnecessary — each
   iteration reads `$request` and `$credit` directly.
 - **A path-style S3 URL against the S3 service host is mis-parsed.**
-  ([Fix in review.](https://github.com/allensanborn/floci/pull/17)) With
+  ([floci-io/floci#4195](https://github.com/floci-io/floci/issues/4195); fix in review as
+  [#4248](https://github.com/floci-io/floci/pull/4248).) With
   `AWS_ENDPOINT_URL_S3=http://s3.localhost.floci.io:4566`, CDK emits a `TemplateURL` of
   `http://s3.localhost.floci.io:4566/<bucket>/<key>` and Floci reads the bucket as the
   literal string `"s3"`, then reports `The specified bucket does not exist` for a bucket
