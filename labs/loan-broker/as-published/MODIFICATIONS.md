@@ -109,7 +109,8 @@ unchanged, and nothing else in the sample has to know. Default off; `run.sh` tur
 **Its lifetime.** This is meant to be deleted, and that has been verified rather than
 assumed. The gap is tracked as
 [floci-io/floci#4193](https://github.com/floci-io/floci/issues/4193) and fixed in
-[floci-io/floci#4247](https://github.com/floci-io/floci/pull/4247);
+[floci-io/floci#4247](https://github.com/floci-io/floci/pull/4247), merged 2026-09-23
+but not yet carried by any released image;
 running this lab against a build of that branch with `FLOCI_NO_LAMBDA_DESTINATIONS=0` — the shim off — the quotes
 flow through the real destination path and the workflow is resumed by `SendTaskSuccess`
 in about two seconds instead of falling into its five-second timeout. Once that ships in
@@ -129,7 +130,8 @@ configured suffix as virtual-hosted, so it parses the bucket as the literal stri
 and reports `The specified bucket does not exist` — for a bucket that is right there.
 Using the plain endpoint sidesteps it. Tracked as
 [floci-io/floci#4195](https://github.com/floci-io/floci/issues/4195) and fixed in
-[floci-io/floci#4248](https://github.com/floci-io/floci/pull/4248).
+[floci-io/floci#4248](https://github.com/floci-io/floci/pull/4248), merged 2026-09-23 and
+likewise awaiting a release.
 
 **`teardown.sh` destroys one stack per `cdklocal destroy` invocation** rather than using
 `destroy --all`, which deletes only the first stack against Floci. A delete finishes in

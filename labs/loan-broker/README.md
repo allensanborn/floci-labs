@@ -280,8 +280,10 @@ Both tracks work around it with `FLOCI_NO_LAMBDA_DESTINATIONS=1`, which has the 
 handler publish the exact envelope AWS's destination would have published — so the
 EventBridge rule matches unchanged and nothing else knows. It is one fenced block,
 default off, and meant to be deleted. Tracked upstream as
-[floci-io/floci#4193](https://github.com/floci-io/floci/issues/4193); the fix is in review
-as [floci-io/floci#4247](https://github.com/floci-io/floci/pull/4247). That fix is
+[floci-io/floci#4193](https://github.com/floci-io/floci/issues/4193) and fixed by
+[floci-io/floci#4247](https://github.com/floci-io/floci/pull/4247), which merged on
+2026-09-23 and is **not in a released image yet** — the latest release is 2.1.0, cut
+2026-09-15. Until one ships, the shim stays. That fix is
 deliberately narrow: it resolves the configuration on the function, so a destination
 configured on an *alias* still does not fire
 ([floci-io/floci#4263](https://github.com/floci-io/floci/issues/4263)). This lab configures
@@ -339,8 +341,9 @@ behaviour, so it is a genuine trade rather than a simple bug. Tracked upstream a
   hit it, because with assigned variables an `ItemSelector` is unnecessary — each
   iteration reads `$request` and `$credit` directly.
 - **A path-style S3 URL against the S3 service host is mis-parsed.**
-  ([floci-io/floci#4195](https://github.com/floci-io/floci/issues/4195); fix in review as
-  [#4248](https://github.com/floci-io/floci/pull/4248).) With
+  ([floci-io/floci#4195](https://github.com/floci-io/floci/issues/4195); fixed by
+  [#4248](https://github.com/floci-io/floci/pull/4248), merged 2026-09-23, also not yet
+  released.) With
   `AWS_ENDPOINT_URL_S3=http://s3.localhost.floci.io:4566`, CDK emits a `TemplateURL` of
   `http://s3.localhost.floci.io:4566/<bucket>/<key>` and Floci reads the bucket as the
   literal string `"s3"`, then reports `The specified bucket does not exist` for a bucket
