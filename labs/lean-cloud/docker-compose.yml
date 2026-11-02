@@ -9,17 +9,27 @@
 #                 PersistentVolumeClaims bind. Real EKS ships no default StorageClass,
 #                 which is why Floci removes it by default.
 #
+#   FLOCI_DOCKER_RESOURCE_NAMESPACE
+#               — scopes the containers, networks and volumes Floci creates. Without it, a
+#                 second Floci on the same Docker daemon adopts the first one's ECR
+#                 registry and shares its resource names.
+#
 # The image is a nightly, not :latest, because the in-cluster act pushes to Floci's ECR, and
 # floci:latest (2.4.0) answers that push with 503. The only ECR change between 2.4.0 and
 # this nightly is floci-io/floci#7224. Go back to :latest once a release includes it.
+#
+# The port is published on 127.0.0.1 only. That keeps an unauthenticated emulator off the
+# LAN, and it keeps clients on IPv4: over [::1], a request that makes Floci detach itself
+# from a VPC network (DeleteVpc at the end of infra.sh) was seen to hang for good.
 #
 # FLOCI_PORT moves the published port when 4566 is taken; set AWS_ENDPOINT_URL to match.
 services:
   floci:
     image: ${FLOCI_IMAGE:-floci/floci:nightly-11012026}
     ports:
-      - "${FLOCI_PORT:-4566}:4566"
+      - "127.0.0.1:${FLOCI_PORT:-4566}:4566"
     environment:
       FLOCI_SERVICES_EKS_DEFAULT_STORAGE_CLASS: "true"
+      FLOCI_DOCKER_RESOURCE_NAMESPACE: lean-cloud-lab
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

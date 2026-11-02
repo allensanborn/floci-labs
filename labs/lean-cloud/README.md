@@ -193,7 +193,6 @@ expected_stdout_lines:
   - 'pod worker3-0 Running'
   - "log-summary in Floci's EKS: files=16, errors=24"
   - 'Removed namespace lean-cloud and its node disks.'
-  - '28 destroyed'
   - 'AWS infrastructure removed.'
   - 'lean-cloud provisions and tears down its AWS stack on Floci.'
 output_match_mode: substring
@@ -310,6 +309,7 @@ Measured against `floci/floci:nightly-11012026`, `nightly-10312026` and `latest`
 | `aws eks describe-cluster-versions` is not implemented (`Unknown operation: GET /cluster-versions`) | Stops `aws.sh init`, which pins the newest version in standard support. Until a fix is released, `infra.sh` writes the same `aws.tfvars.json` that `init` would have written, and says so. |
 | `ec2 describe-instance-types` returns nothing for `m7g.large` (Graviton3, lean-cloud's default) | `init` derives the architecture and worker zone from it. The catalog has 25 types, and plain `m7g` is not among them. |
 | `aws_eks_cluster.upgrade_policy` is dropped, so every plan shows a diff | Reported upstream as [floci-io/floci#5640](https://github.com/floci-io/floci/issues/5640). `infra.sh` accepts exactly this drift and fails on any other. |
+| `aws.sh destroy` sometimes waits forever on `aws_vpc.cloud` | Floci has already deleted the VPC and its Docker network, but OpenTofu's `DeleteVpc` connection stays open with no reply. Seen in 4 of 7 full runs on `nightly-11012026`; the cause is not identified yet. `infra.sh` waits 4 minutes, checks with Floci that the VPC is gone, stops that run and destroys again, and says so with a `gap` line. |
 | ECR `docker login` and `docker push` return 503, and `delete-repository --force` fails with "Backing registry unreachable" | Seen on `floci:latest` (2.4.0) and `nightly-10312026`; works on `nightly-11012026`. The only ECR change in between is [floci-io/floci#7224](https://github.com/floci-io/floci/pull/7224). `docker-compose.yml` pins that nightly until a release includes it. |
 
 ### Left to Floci

@@ -14,6 +14,11 @@ INFRA=$PWD/.work/aws-infra
 AWS_SH=.work/lean-cloud/deploy/aws.sh
 KUBE_SH=.work/lean-cloud/deploy/kubernetes.sh
 
+# A test runner's timeout signals this script only. Take the helpers it started
+# (aws.sh -> tofu -> provider) down too, or they keep changing Floci after we are gone.
+kill_tree() { local c; for c in $(pgrep -P "$1"); do kill_tree "$c"; done; kill "$1" 2>/dev/null; }
+trap 'for c in $(pgrep -P $$); do kill_tree "$c"; done; exit 143' TERM INT
+
 say() { printf '\n\033[1;34m== %s\033[0m\n' "$*"; }
 ok()  { printf '\033[1;32mok\033[0m  %s\n' "$*"; }
 gap() { printf '\033[1;33mgap\033[0m %s\n' "$*"; }
@@ -158,7 +163,24 @@ esac
 
 say "7. aws.sh destroy-plan + destroy"
 "$AWS_SH" destroy-plan "$INFRA" > .work/destroy-plan.log 2>&1 || { tail -20 .work/destroy-plan.log; die "destroy-plan failed"; }
-"$AWS_SH" destroy "$INFRA" > .work/destroy.log 2>&1 || { tail -20 .work/destroy.log; die "destroy failed"; }
+# A normal destroy takes under a minute. Some runs leave OpenTofu waiting forever on the
+# DeleteVpc response, although Floci has already deleted the VPC. Give it four minutes; if
+# the VPC is gone by then, stop that run and destroy again. The fresh plan finds nothing
+# left to wait for, and aws.sh still runs its own post-destroy checks.
+"$AWS_SH" destroy "$INFRA" > .work/destroy.log 2>&1 & destroying=$!
+for _ in $(seq 1 240); do kill -0 "$destroying" 2>/dev/null || break; sleep 1; done
+if kill -0 "$destroying" 2>/dev/null; then
+  vpc=$(jq -r .vpcId "$INFRA/cloud.json")
+  aws ec2 describe-vpcs --profile lean-cloud --vpc-ids "$vpc" >/dev/null 2>&1 &&
+    { kill_tree "$destroying"; die "destroy is stuck and $vpc still exists"; }
+  kill_tree "$destroying"; wait "$destroying" 2>/dev/null || true
+  rmdir "$INFRA/.operation" 2>/dev/null || true   # its lock; we just stopped its holder
+  gap "destroy stopped answering after Floci deleted $vpc; destroying again"
+  "$AWS_SH" destroy-plan "$INFRA" > .work/destroy-plan.log 2>&1 || { tail -20 .work/destroy-plan.log; die "destroy-plan failed"; }
+  "$AWS_SH" destroy "$INFRA" > .work/destroy.log 2>&1 || { tail -20 .work/destroy.log; die "destroy failed"; }
+else
+  wait "$destroying" || { tail -20 .work/destroy.log; die "destroy failed"; }
+fi
 log .work/destroy.log 'Destroy complete|Apply complete|AWS infrastructure removed'
 echo
 printf '\033[1;32mlean-cloud provisions and tears down its AWS stack on Floci.\033[0m\n'
