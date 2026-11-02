@@ -1,0 +1,45 @@
+# lean-cloud's local topology — one scheduler, three workers — with its blob store
+# pointed at Floci instead of the SeaweedFS container the upstream compose file runs.
+# Floci is NOT in this file: it is whatever answers on the host's port 4566.
+name: lean-cloud-floci
+
+x-node: &node
+  image: lean-cloud-demo:floci
+  restart: unless-stopped
+  stop_grace_period: 20s
+  extra_hosts: ["host.docker.internal:host-gateway"]  # reach Floci on Linux too
+
+services:
+  scheduler:
+    <<: *node
+    command: ["serve-scheduler", "/etc/lean-cloud/config.json"]
+    hostname: scheduler-mailbox
+    ports: ["127.0.0.1:${LEAN_CLOUD_PORT:-8090}:8080"]
+    volumes:
+      - ./.work/config.json:/etc/lean-cloud/config.json:ro
+      - scheduler-data:/data
+      - scheduler-mailbox:/mailbox
+  worker1: &worker
+    <<: *node
+    command: ["serve-worker", "/etc/lean-cloud/config.json"]
+    hostname: worker1-mailbox
+    environment: {CLOUD_WORKER_ID: worker1}
+    volumes: [./.work/config.json:/etc/lean-cloud/config.json:ro, worker1-mailbox:/mailbox]
+    depends_on: {scheduler: {condition: service_healthy}}
+  worker2:
+    <<: *worker
+    hostname: worker2-mailbox
+    environment: {CLOUD_WORKER_ID: worker2}
+    volumes: [./.work/config.json:/etc/lean-cloud/config.json:ro, worker2-mailbox:/mailbox]
+  worker3:
+    <<: *worker
+    hostname: worker3-mailbox
+    environment: {CLOUD_WORKER_ID: worker3}
+    volumes: [./.work/config.json:/etc/lean-cloud/config.json:ro, worker3-mailbox:/mailbox]
+
+volumes:
+  scheduler-data:
+  scheduler-mailbox:
+  worker1-mailbox:
+  worker2-mailbox:
+  worker3-mailbox:
