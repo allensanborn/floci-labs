@@ -55,6 +55,7 @@ docker run -d --name floci -p 4566:4566 \
 |-----|--------------|-------|
 | [example-s3-photo-gallery](labs/example-s3-photo-gallery) | A tiny photo gallery backed by local S3 | Node.js, S3 |
 | [eks-hello-cluster](labs/eks-hello-cluster) | Full EKS control-plane lifecycle on Floci, plus a kubectl workload bonus | Bash, AWS CLI, EKS/k3s |
+| [lean-cloud](labs/lean-cloud) | A distributed Lean 4 runtime on Floci S3, its own test suites, and its full AWS walkthrough (OpenTofu, ECR, EKS pods) | Lean 4, Bash, OpenTofu, S3/EKS/ECR/IAM |
 
 > _Your lab here. Open a PR._
 

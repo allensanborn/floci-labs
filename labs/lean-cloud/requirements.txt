@@ -1,0 +1,4 @@
+# The README in this directory is executable: `mm.py README.md` runs its bash blocks and
+# checks their output. Same tool the Dapr quickstarts use to keep their tutorials honest.
+#   https://github.com/dapr/mechanical-markdown
+mechanical-markdown==0.8.0
