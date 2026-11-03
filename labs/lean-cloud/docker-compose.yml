@@ -18,14 +18,22 @@
 # floci:latest (2.4.0) answers that push with 503. The only ECR change between 2.4.0 and
 # this nightly is floci-io/floci#7224. Go back to :latest once a release includes it.
 #
-# The port is published on 127.0.0.1 only. That keeps an unauthenticated emulator off the
-# LAN, and it keeps clients on IPv4: over [::1], a request that makes Floci detach itself
-# from a VPC network (DeleteVpc at the end of infra.sh) was seen to hang for good.
+#   network_mode: bridge
+#               — Floci joins each VPC's Docker network, and when that network's name
+#                 (floci-aws-...) sorts before Floci's own network, Docker moves Floci's
+#                 default gateway onto it. On OrbStack the published port then stops
+#                 delivering, and the DeleteVpc at the end of infra.sh never gets its
+#                 answer. A compose project network (lean-cloud_default) sorts after
+#                 floci-aws-...; Docker's default bridge sorts before it.
+#
+# The port is published on 127.0.0.1 only, which keeps an unauthenticated emulator off
+# the LAN.
 #
 # FLOCI_PORT moves the published port when 4566 is taken; set AWS_ENDPOINT_URL to match.
 services:
   floci:
     image: ${FLOCI_IMAGE:-floci/floci:nightly-11012026}
+    network_mode: bridge
     ports:
       - "127.0.0.1:${FLOCI_PORT:-4566}:4566"
     environment:

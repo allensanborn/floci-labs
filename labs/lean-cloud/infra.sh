@@ -93,6 +93,10 @@ aws eks list-pod-identity-associations --profile lean-cloud --cluster-name "$NAM
   --query 'associations[].[namespace,serviceAccount]' --output text | awk '{print "  pod identity " $1 "/" $2}'
 
 say "4. lean-cloud's nodes as pods in the cluster"
+# k3s creates its local-path StorageClass a few seconds after the API answers.
+for _ in $(seq 1 60); do
+  kubectl --kubeconfig "$INFRA/kubeconfig" get storageclass local-path >/dev/null 2>&1 && break; sleep 1
+done
 kubectl --kubeconfig "$INFRA/kubeconfig" get storageclass local-path >/dev/null 2>&1 ||
   die "no local-path StorageClass: start Floci with FLOCI_SERVICES_EKS_DEFAULT_STORAGE_CLASS=true (docker-compose.yml does)"
 DEPLOY=$PWD/.work/aws-deployment
